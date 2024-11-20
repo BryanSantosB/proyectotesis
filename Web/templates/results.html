@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados del Diagnóstico Estructural</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .card-body {
+            background-color: #fff;
+        }
+
+        .damage-details {
+            margin-top: 15px;
+        }
+
+        .damage-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-left: 5px solid #007bff;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .damage-severity {
+            font-weight: bold;
+        }
+
+        .recommendations {
+            background-color: #ffdddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .img-thumbnail {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .accordion-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .accordion-button:not(.collapsed) {
+            color: white;
+            background-color: #0056b3;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        .accordion-body {
+            background-color: #f1f1f1;
+        }
+
+        .damage-type-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+
+        .damage-type-crack {
+            background-color: #ff0000;
+        }
+
+        .damage-type-rebar {
+            background-color: #00ff00;
+        }
+
+        .damage-type-spalling {
+            background-color: #0000ff;
+        }
+
+        .damage-type-corrosion {
+            background-color: #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Resultados del Diagnóstico Estructural</h1>
+
+        <!-- Iterar sobre cada imagen procesada -->
+        {% for image_data in processed_images %}
+        <div class="card">
+            <div class="card-header">
+                Diagnóstico para la imagen: {{ image_data.image }}
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <!-- Imagen con las detecciones -->
+                    <img src="{{ url_for('static', filename='results/' + 'processed_' + image_data.image) }}" alt="Imagen de diagnóstico" class="img-thumbnail">
+                </div>
+
+                <!-- Resultados generales del análisis -->
+                <h5 class="mt-4">Análisis General del Daño</h5>
+                <p><strong>Patrón de Daños:</strong> {{ image_data.pattern_analysis.pattern }}</p>
+                <p><strong>Nivel de Riesgo:</strong> {{ image_data.pattern_analysis.risk_level }}</p>
+                {% if image_data.pattern_analysis.coverage_percentage %}
+                <p><strong>Cobertura Total de Daños:</strong> {{ image_data.pattern_analysis.coverage_percentage }}%</p>
+                {% endif %}
+
+                <!-- Panel de recomendaciones -->
+                <div class="recommendations">
+                    <h6>Recomendaciones</h6>
+                    <ul>
+                        {% for recommendation in image_data.recommendations %}
+                        <li>{{ recommendation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Leyenda de colores -->
+                <div class="mt-4">
+                    <h6>Leyenda de Daños</h6>
+                    <div><span class="damage-type-indicator damage-type-crack"></span> Grieta</div>
+                    <div><span class="damage-type-indicator damage-type-rebar"></span> Acero de Refuerzo Expuesto</div>
+                    <div><span class="damage-type-indicator damage-type-spalling"></span> Desprendimiento de Concreto</div>
+                    <div><span class="damage-type-indicator damage-type-corrosion"></span> Corrosión</div>
+                </div>
+
+                <!-- Panel desplegable para detalles de daños detectados -->
+                <div class="accordion mt-4" id="accordion-main-{{ loop.index }}">
+                    <h5>Detalles del Daño</h5>
+                    <div class="accordion-item">
+                        <h6 class="accordion-header" id="heading-main-{{ loop.index }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-main-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-main-{{ loop.index }}">
+                                Defectos detectados ({{ image_data.damages|length }})
+                            </button>
+                        </h6>
+                        <div id="collapse-main-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading-main-{{ loop.index }}" data-bs-parent="#accordion-main-{{ loop.index }}">
+                            <div class="accordion-body">
+                                {% for damage in image_data.damages %}
+                                <div class="accordion-item">
+                                    <h6 class="accordion-header" id="heading-{{ loop.index }}-{{ loop.index }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-{{ loop.index }}-{{ loop.index }}">
+                                            <span class="damage-type-indicator damage-type-{{ damage.type }}"></span>
+                                            Daño detectado #{{ loop.index }} ({{ damage.severity }})
+                                        </button>
+                                    </h6>
+                                    <div id="collapse-{{ loop.index }}-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ loop.index }}-{{ loop.index }}" data-bs-parent="#accordion-main-{{ loop.index }}">
+                                        <div class="accordion-body">
+                                            <!-- Detalles del daño -->
+                                            <div class="damage-details">
+                                                <div class="damage-item">
+                                                    <p><strong>Tipo de Daño:</strong> {{ damage.type|capitalize }}</p>
+                                                    <p><strong>Área Afectada:</strong> {{ "%.2f"|format(damage.area) }} px²</p>
+                                                    <p><strong>Textura:</strong> {{ "%.2f"|format(damage.texture) }}</p>
+                                                    <p><strong>Color (RGB):</strong> {{ damage.color|join(', ') }}</p>
+                                                    <p><strong>Confianza:</strong> {{ "%.2f"|format(damage.confidence * 100) }}%</p>
+                                                    <p><strong>Posición:</strong> {{ damage.relative_position }}</p>
+                                                    <p><strong>Severidad:</strong> {{ damage.severity }} ({{ "%.2f"|format(damage.severity_score) }})</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
